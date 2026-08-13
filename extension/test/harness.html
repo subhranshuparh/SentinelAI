@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SentinelAI — Extension Test Harness</title>
+    <link rel="stylesheet" href="harness.css" />
+  </head>
+  <body>
+    <!--
+      A local page that reproduces the three field types the content script has
+      to handle, without depending on Gmail being cooperative.
+
+      Two reasons this file exists rather than testing straight on Gmail:
+
+        1. Gmail's DOM changes without notice, and debugging a content script
+           through 40 layers of obfuscated divs at 3am is not a plan.
+        2. It is the demo fallback. If the venue wifi is down or a Google login
+           challenge appears mid-pitch, this page still shows the whole feature
+           working, offline, in five seconds.
+
+      Serve it over http (not file://), because content scripts are not injected
+      into file:// URLs unless the user explicitly grants that permission:
+
+          cd extension && python -m http.server 8080
+          open http://localhost:8080/test/harness.html
+    -->
+
+    <header>
+      <h1>SentinelAI — Extension Test Harness</h1>
+      <p class="sub">
+        Type or paste into the fields below. A warning panel should appear at the
+        bottom-right. Nothing on this page talks to the backend — the extension
+        does all of it.
+      </p>
+    </header>
+
+    <section class="checks">
+      <h2>Before you start</h2>
+      <ol>
+        <li>Backend running: <code>uvicorn app.main:app --port 8000</code></li>
+        <li>Extension loaded at <code>chrome://extensions</code> → Developer mode → Load unpacked → pick the <code>extension/</code> folder</li>
+        <li>This page opened over <code>http://localhost:8080</code>, not <code>file://</code></li>
+      </ol>
+    </section>
+
+    <!-- Sample values ------------------------------------------------------ -->
+    <section class="samples">
+      <h2>Sample values</h2>
+      <p class="sub">
+        All fabricated. The Aadhaar and card numbers are checksum-valid but not
+        issued to anyone — never test with a real one.
+      </p>
+      <div class="chips" id="chips"></div>
+      <p class="hint">Click a chip to copy it, then paste into a field below.</p>
+    </section>
+
+    <!-- The three field types --------------------------------------------- -->
+    <section class="fields">
+      <h2>1 — Plain input</h2>
+      <p class="sub">The easy case. Masking uses the native value setter.</p>
+      <input id="f-input" type="text" placeholder="Type here…" autocomplete="off" />
+
+      <h2>2 — Textarea</h2>
+      <p class="sub">Multi-line. Character offsets map straight onto the value.</p>
+      <textarea id="f-textarea" rows="4" placeholder="Type a longer message here…"></textarea>
+
+      <h2>3 — Contenteditable</h2>
+      <p class="sub">
+        What Gmail and WhatsApp Web actually use. The text below is deliberately
+        split across bold and plain nodes — if masking flattens the formatting,
+        the TreeWalker logic is wrong.
+      </p>
+      <div id="f-contenteditable" contenteditable="true" class="editable">
+        <div>Hi <b>Priya</b>,</div>
+        <div>Please book the ticket. My details are below.</div>
+        <div><br /></div>
+        <div>Thanks,<br /><i>Ravi</i></div>
+      </div>
+
+      <h2>4 — Password field (control)</h2>
+      <p class="sub">
+        Must stay silent. Its value is never read, never scanned, never sent.
+        Paste a card number in here and nothing should happen at all.
+      </p>
+      <input id="f-password" type="password" placeholder="Nothing should fire here" autocomplete="off" />
+    </section>
+
+    <!-- Module 9 — QR codes ------------------------------------------------ -->
+    <section class="fields">
+      <h2>5 — QR codes</h2>
+      <p class="sub">
+        Right-click any code below and choose
+        <strong>“Check this QR code with SentinelAI”</strong>. A panel appears at
+        the bottom-right showing <em>where the code actually goes</em> before the
+        verdict — that line is the point of the feature, because a QR code is
+        unreadable to a human being.
+      </p>
+      <p class="sub">
+        Every payload is fabricated. The payment addresses are syntactically
+        valid and belong to nobody. Regenerate them with
+        <code>python extension/test/generate_qr_samples.py</code>.
+      </p>
+
+      <div class="qr-grid">
+        <figure>
+          <img src="qr/scam-receive-money.png" alt="QR code: fake Amazon refund payment request" />
+          <figcaption>
+            <strong>“Scan to receive ₹50,000”</strong>
+            <span>Expect <b>dangerous</b>. It <em>pays out</em> ₹50,000. The panel should say so in words — no QR code can put money into your account.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/scam-unknown-handle.png" alt="QR code: payment to an unrecognised UPI handle" />
+          <figcaption>
+            <strong>“KYC verification”, ₹25,000</strong>
+            <span>Expect <b>dangerous</b>. <code>@upisecure</code> is not a real payment provider, and the amount is pre-filled.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/scam-shortened-link.png" alt="QR code: shortened link" />
+          <figcaption>
+            <strong>Shortened link</strong>
+            <span>Expect the shortener to be listed as a finding. With the backend offline the verdict stays <b>unknown</b> — never <b>safe</b>.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/shop-counter.png" alt="QR code: genuine merchant payment request" />
+          <figcaption>
+            <strong>Tea stall counter, ₹45</strong>
+            <span>Expect <b>safe</b>. This is the false positive that would kill the feature — a pre-filled amount alone must not raise an alarm.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/person-open-amount.png" alt="QR code: ordinary personal payment request" />
+          <figcaption>
+            <strong>Person, amount left open</strong>
+            <span>Expect <b>safe</b>, and one grey line saying the payee’s name could not be verified — because it genuinely cannot.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/plain-link.png" alt="QR code: ordinary web address" />
+          <figcaption>
+            <strong>An ordinary web address</strong>
+            <span>Expect <b>safe</b> when online, <b>unknown</b> when the network is down. A famous name is never assumed to be fine.</span>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="qr/wifi-open.png" alt="QR code: open Wi-Fi network" />
+          <figcaption>
+            <strong>“Free Airport WiFi”, no password</strong>
+            <span>Expect <b>suspicious</b>. The encryption is checkable and it is absent; who runs the network is not, and the panel should admit that rather than guess.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Module 10 — Clipboard Guardian ------------------------------------- -->
+    <section class="fields">
+      <h2>6 — Clipboard Guardian</h2>
+      <p class="sub">
+        Copy one of the fake credentials below, then paste it into the field
+        underneath. The paste is <em>held</em> — not silently blocked — and a
+        panel offers <strong>Paste masked · Cancel paste · Paste anyway</strong>.
+        None of these are real keys; they are shaped correctly and belong to
+        nobody.
+      </p>
+      <div class="chips" id="cred-chips"></div>
+
+      <h2 class="minor">Paste target</h2>
+      <textarea
+        id="f-paste"
+        rows="3"
+        placeholder="Paste a credential here…"
+      ></textarea>
+      <p class="hint">
+        The destination line fills in a moment after the panel appears. On this
+        page it will say SentinelAI does not recognise
+        <code>localhost:8080</code>… unless you are on <code>localhost</code>,
+        which the table classifies as a development server — which is the point:
+        <strong>where</strong> you paste changes the answer.
+      </p>
+    </section>
+
+    <!-- Module 11 — chat scams -------------------------------------------- -->
+    <section class="fields">
+      <h2>7 — Chat scam detection</h2>
+      <p class="sub">
+        Each block below is a scam script written the way it actually arrives.
+        <strong>Select one, right-click it, and choose "Check this message with
+        SentinelAI".</strong> No adapter, no MutationObserver, and no chat app
+        is involved — this is the path that works on every site, and the path
+        that still works when WhatsApp changes its markup.
+      </p>
+      <p class="hint">
+        These are fabricated. The phone numbers, UPI IDs and amounts belong to
+        nobody, and nothing here is sent anywhere until you right-click.
+      </p>
+
+      <div class="chat" id="chat-scripts"></div>
+
+      <p class="hint">
+        Automatic watching is a separate thing and is <strong>off</strong>. It
+        only runs on WhatsApp Web and Telegram Web, only after you switch it on
+        in the popup, and it shows a marker in the corner the whole time it is
+        running.
+      </p>
+    </section>
+
+    <!-- Module 12 — screenshots -------------------------------------------- -->
+    <section class="fields">
+      <h2>8 — Screenshots</h2>
+      <p class="sub">
+        Every image below is drawn by this page on a <code>&lt;canvas&gt;</code>
+        as it loads. There is no photograph of a real document anywhere in this
+        repository and there never will be — a project whose entire argument is
+        that pictures of identity documents are dangerous to leave lying around
+        cannot ship one as a test fixture.
+      </p>
+      <p class="sub">
+        Press <strong>Attach</strong> under a card. It is placed into the file
+        field at the bottom of this section exactly as if you had picked it off
+        your disk, and the extension's upload watcher takes it from there.
+        <strong>Save</strong> writes the same PNG to your downloads folder, which
+        is how you feed it to the dashboard's screenshot panel.
+      </p>
+
+      <div class="shot-grid" id="shot-grid"></div>
+
+      <h2 class="minor">Upload field</h2>
+      <input id="f-upload" type="file" accept="image/*" multiple />
+      <p class="hint">
+        A real file picker works here too — the extension does not know or care
+        that a button on this page put the file in the field. Reading takes a few
+        seconds the first time, while the recogniser loads; after that it is
+        warm. Nothing is uploaded anywhere: this page has no server side, and the
+        image itself never leaves your machine in any case.
+      </p>
+    </section>
+
+    <section class="checks">
+      <h2>What to verify</h2>
+      <ul>
+        <li>Warning appears within about a second of typing, bottom-right</li>
+        <li>Panel shows a <strong>reason</strong> and a <strong>confidence</strong> — never a bare verdict</li>
+        <li><strong>Mask it</strong> replaces the value in place, and the panel closes</li>
+        <li>In field 3, the bold <b>Priya</b> and italic <i>Ravi</i> survive masking</li>
+        <li>Field 4 never produces a warning</li>
+        <li><strong>Always allow here</strong> silences that one type on this origin, and the popup lists it as reversible</li>
+        <li>Stop the backend, type again → an "offline" note appears rather than silence</li>
+      </ul>
+
+      <h2>QR codes</h2>
+      <ul>
+        <li>Right-clicking an image offers <strong>Check this QR code with SentinelAI</strong>; right-clicking plain text does not</li>
+        <li>A <strong>spinner appears immediately</strong>, then is replaced by the result — the click never appears to do nothing</li>
+        <li>The <strong>destination line sits above the verdict</strong>, in the largest type on the panel</li>
+        <li>The ₹50,000 code says it <strong>pays out</strong>, not that it receives</li>
+        <li>The ₹45 tea-stall code is <strong>safe</strong> — if that one alarms, the feature is unusable in India</li>
+        <li>Right-click a photo that has no QR code in it → "No QR code found", not a green panel</li>
+        <li>Stop the backend, right-click again → "could not reach its backend", never a verdict</li>
+      </ul>
+
+      <h2>Clipboard</h2>
+      <ul>
+        <li>Pasting an <code>AKIA…</code> key <strong>does not put text in the field</strong> until you choose — the panel appears first</li>
+        <li>The block is <strong>instant</strong>. There is no perceptible delay, because no network call has happened yet</li>
+        <li><strong>Cancel paste</strong> leaves the field exactly as it was, with the caret still in it</li>
+        <li><strong>Paste masked</strong> inserts <code>AKIA••••••••••••••••</code>, and <kbd>Ctrl</kbd>+<kbd>Z</kbd> still works</li>
+        <li><strong>Paste anyway</strong> inserts the original and does <em>not</em> then show a second warning for the same value</li>
+        <li>Pasting ordinary prose is untouched — no panel, no delay, nothing</li>
+        <li>Stop the backend and paste a key → the panel still appears (it is local), and the destination line reads "could not check where this was going"</li>
+        <li>Paste into field 4 (password) → nothing at all. The clipboard is never even read</li>
+      </ul>
+
+      <h2>Chat scams</h2>
+      <ul>
+        <li>The menu item appears <strong>only when text is selected</strong> — right-click with nothing highlighted and it is absent</li>
+        <li>The OTP script is <strong>dangerous</strong>, and the panel names the pattern: "This resembles a common OTP fraud"</li>
+        <li>The panel <strong>quotes the line that triggered it</strong>, and that quote appears character-for-character in the block above</li>
+        <li>The friendly UPI message is <strong>not</strong> an alarm — a person sharing their payment ID is ordinary, and flagging it makes the tool unusable in India</li>
+        <li>Select two words and check → "select more of the conversation", <em>not</em> a green verdict</li>
+        <li>Stop the backend, then check the OTP script again → it is <strong>still dangerous</strong>. Tier 1 runs offline, and the footnote reads "pattern checks only"</li>
+        <li>Nothing you check here appears on the dashboard afterwards — the endpoint stores nothing, by design</li>
+      </ul>
+
+      <h2>Screenshots</h2>
+      <ul>
+        <li>Attaching the Aadhaar card shows a <strong>“Checking…”</strong> panel first — the read takes seconds and a silent wait is indistinguishable from a broken feature</li>
+        <li>The panel quotes a <strong>masked</strong> value (<code>XXXX XXXX 9014</code>) and never the number itself</li>
+        <li>The <strong>misread</strong> card is found too, is labelled a <strong>corrected read</strong>, and its confidence is <em>visibly lower</em> than the clean card's — that gap is the honesty of the whole module</li>
+        <li>Its reason names the characters that were changed, so you can check the correction against the card yourself</li>
+        <li><strong>Remove from upload</strong> genuinely empties the field — check it, do not trust the panel's word for it</li>
+        <li><strong>Upload anyway</strong> leaves the file in place and does <em>not</em> warn a second time</li>
+        <li>The delivery note produces <strong>nothing at all</strong>. A 16-digit order number and a delivery date are not a card number and a date of birth, and a tool that cannot tell the difference is one people switch off</li>
+        <li>Attach a non-image (rename anything to <code>.pdf</code>) → <strong>nothing happens</strong>, not a "could not check" panel. It was never in scope</li>
+        <li>Stop the backend and attach again → "could not reach its backend". The reading still happened locally; it is the classification that could not</li>
+        <li>Every finding here appears in the dashboard timeline as <strong>“found in an image on”</strong>, not "caught on" — how it nearly left you is part of the story</li>
+        <li><strong>Save</strong> a card, then drop the file on the dashboard's screenshot panel → the same finding, from the same code, with no extension installed at all</li>
+      </ul>
+    </section>
+
+    <script src="harness.js"></script>
+  </body>
+</html>

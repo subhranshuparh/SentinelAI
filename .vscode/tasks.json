@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1 · Backend (uvicorn :8000)",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "sentinel", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "2 · Dashboard (vite :5173)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/dashboard" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "sentinel", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "3 · Test harness page (:8080)",
+      "type": "shell",
+      "command": "python -m http.server 8080",
+      "options": { "cwd": "${workspaceFolder}/extension" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "sentinel", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "▶ Run everything",
+      "dependsOn": [
+        "1 · Backend (uvicorn :8000)",
+        "2 · Dashboard (vite :5173)",
+        "3 · Test harness page (:8080)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup · install backend deps",
+      "type": "shell",
+      "command": "python -m venv .venv && .venv/Scripts/python.exe -m pip install -r requirements.txt",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup · install dashboard deps",
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}/dashboard" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup · check API keys (Phase-0 gate)",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe scripts/smoke_test_keys.py",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Seed 21 days of demo history",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe -m app.db.seed",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Re-seed from scratch (--reset)",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe -m app.db.seed --reset",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests · backend (315, offline)",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe -m pytest tests -q",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build · dashboard (tsc + vite)",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}/dashboard" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

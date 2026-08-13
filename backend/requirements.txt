@@ -1,0 +1,16 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# --- HTTP client (Safe Browsing, RDAP, Gemini) ---
+# httpx is async-native, so external calls never block the event loop.
+httpx==0.28.1
+
+# --- Database ---
+# SQLite via SQLAlchemy. Swapping to Postgres = change DATABASE_URL + add psycopg.
+SQLAlchemy==2.0.36
+
+# --- Testing ---
+pytest==8.3.4

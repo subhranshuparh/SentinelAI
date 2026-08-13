@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "SentinelAI — Privacy & Safe Browsing Copilot",
+  "version": "0.1.0",
+  "description": "Catches sensitive information before you send it, and warns you about unsafe websites.",
+
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "activeTab",
+    "contextMenus",
+    "offscreen"
+  ],
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SentinelAI",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "*://*.google.com/recaptcha/*",
+        "*://accounts.google.com/*",
+        "*://*.paypal.com/*",
+        "*://*.onlinesbi.sbi/*"
+      ],
+      "js": [
+        "lib/allowlist.js",
+        "lib/bridge.js",
+        "lib/chat-adapters.js",
+        "content/toast.js",
+        "content/content.js",
+        "content/clipboard.js",
+        "content/qr.js",
+        "content/chat.js",
+        "content/upload.js"
+      ],
+      "css": ["content/toast.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+# --- Secrets: nothing below this line may ever be committed ---
+.env
+.env.local
+*.key
+*.pem
+
+# Google Cloud service-account keys. These carry a private key and are far more
+# dangerous than an API key: they authenticate as an identity with IAM roles,
+# and cannot be scoped by HTTP referrer the way a browser API key can.
+# Matched broadly by name because the console downloads them as
+# <project-id>-<hash>.json with no fixed prefix.
+*service-account*.json
+*serviceaccount*.json
+gen-lang-client-*.json
+credentials.json
+
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Database
+*.db
+*.sqlite3
+
+# run.sh writes each service's stdout here so one crash does not scroll away
+# under the other two. Local diagnostics, not project content.
+.logs/
+
+# Node / dashboard
+node_modules/
+dist/
+.vite/
+
+# Editors / OS
+# .vscode/ is shared on purpose — the tasks, launch configs and interpreter path are
+# how a new machine goes from clone to running in two clicks, so they are part of the
+# project, not personal preference. Everything else under .vscode/ stays ignored.
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

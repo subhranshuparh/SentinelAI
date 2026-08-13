@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  Offscreen document — the extension's only place with a DOM but no page.
+
+  A service worker cannot decode an image: it has no <canvas>, and the QR
+  decoder needs raw pixels. A content script could, but it runs inside a page
+  the extension does not control, where the host site can read anything the
+  extension puts in the DOM and where fetch() is bound by the page's CORS
+  policy. An offscreen document is neither: extension origin, extension CSP,
+  extension host permissions, invisible, and unreachable from any web page.
+
+  Nothing is rendered here and nothing is styled. The document exists to give
+  offscreen.js a canvas and is closed the moment a decode finishes.
+
+  Module 12 (screenshot OCR) loads its Tesseract worker into this same document.
+  That is the reason the file is named for the mechanism rather than for QR
+  codes, and it is why both decoders share one canvas-owning context instead of
+  each getting its own.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SentinelAI offscreen worker</title>
+  </head>
+  <body>
+    <!-- Vendored, pinned, and checksummed in docs/INTEGRATION_NOTES.md.
+         Loaded as a classic script: it is a UMD bundle that assigns
+         self.jsQR, and there is no build step in this extension. -->
+    <script src="../lib/vendor/jsqr.js"></script>
+
+    <!-- Tesseract.js, also vendored and checksummed. Nothing is fetched from a
+         CDN: MV3's CSP would block it, and a security tool that downloads
+         several megabytes of executable code at runtime cannot claim its
+         binaries were reviewed.
+
+         Loading it here rather than lazily inside offscreen.js is deliberate.
+         It assigns self.Tesseract as a UMD bundle, and a <script> tag is the
+         only way to run one without a build step or a dynamic import that MV3
+         would have to be persuaded to allow. The cost of parsing 67 KB is paid
+         on every QR decode too, which is a real but small price for having one
+         offscreen document rather than two. -->
+    <script src="../lib/vendor/tesseract/tesseract.min.js"></script>
+
+    <script src="offscreen.js"></script>
+  </body>
+</html>

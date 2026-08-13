@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Dark before first paint. Without this the browser flashes a white page
+         while React boots, which on a projector is genuinely unpleasant. -->
+    <meta name="color-scheme" content="dark" />
+    <title>SentinelAI — Security Dashboard</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0b0f16;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

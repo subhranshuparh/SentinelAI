@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      No inline scripts and no inline styles anywhere in this file.
+      MV3's content security policy forbids them outright, and the failure mode
+      is a silently blank popup with the error buried in a separate devtools
+      window that most people never think to open.
+    -->
+    <link rel="stylesheet" href="popup.css" />
+    <title>SentinelAI</title>
+  </head>
+  <body>
+    <header class="header">
+      <div class="brand">
+        <span class="dot" id="status-dot"></span>
+        <h1>SentinelAI</h1>
+      </div>
+      <span class="status-text" id="status-text">Checking…</span>
+    </header>
+
+    <!-- Current site ------------------------------------------------------ -->
+    <section class="card" id="site-card">
+      <div class="card-label">This site</div>
+      <div class="site-host" id="site-host">—</div>
+      <div class="verdict" id="site-verdict">Not checked yet</div>
+      <div class="verdict-reason" id="site-reason"></div>
+      <!--
+        The itemised "why". A verdict on its own asks to be taken on faith, and a
+        user who has just seen a red badge deserves the actual evidence — the
+        list built by the popup, one row per signal, including the checks that
+        could not run.
+      -->
+      <ul class="reasons" id="site-reasons"></ul>
+      <div class="confidence" id="site-confidence"></div>
+    </section>
+
+    <!-- Session activity -------------------------------------------------- -->
+    <section class="card">
+      <div class="card-label">Since you opened the browser</div>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-value" id="stat-detected">0</span>
+          <span class="stat-name">caught</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-masked">0</span>
+          <span class="stat-name">masked</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-allowlisted">0</span>
+          <span class="stat-name">allowed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat scam watching (Module 11) ------------------------------------ -->
+    <section class="card" id="watch-card">
+      <div class="card-label">Chat scam watching</div>
+      <!--
+        The consent surface for the one feature that reads somebody else's
+        words. It lives here rather than in the page because a permission
+        prompt rendered inside the app being read is a prompt the app could
+        style, cover, or race — and because a setting you turn on in a chat
+        window is a setting you will not remember you turned on.
+
+        The row is populated by popup.js: a real toggle on a supported chat
+        host, an explanation of where it works anywhere else. It is never
+        pre-checked.
+      -->
+      <div id="watch-body">
+        <p class="empty">Checking this tab…</p>
+      </div>
+      <p class="pw-privacy">
+        Off by default, and set separately for each app. While it is on, a marker
+        stays visible in the corner of the chat. Messages you send are never
+        checked here, and nothing from a conversation is stored.
+      </p>
+    </section>
+
+    <!-- Password check (Module 4) ----------------------------------------- -->
+    <section class="card">
+      <div class="card-label">Password check</div>
+      <!--
+        type="password" so the value never renders on screen and no password
+        manager offers to save it. autocomplete="off" for the same reason.
+
+        The value of this input is read once, hashed in popup.js, and the field
+        is cleared. It is never put in a variable that outlives the click, never
+        sent anywhere, and never stored.
+      -->
+      <input
+        type="password"
+        id="pw-input"
+        class="pw-input"
+        placeholder="Type a password to check"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <input
+        type="text"
+        id="pw-label"
+        class="pw-input"
+        placeholder="Label, e.g. Gmail (optional)"
+        autocomplete="off"
+        maxlength="40"
+      />
+      <button type="button" id="pw-check" class="pw-button">Check against breaches</button>
+      <!--
+        Stated up front, not in a tooltip. A user is about to type a real
+        password into a browser extension; the promise has to be visible at the
+        moment of hesitation, not one click away.
+      -->
+      <p class="pw-privacy">
+        Only the first 5 characters of its SHA-1 hash are sent. Around a thousand
+        other passwords share those 5 characters, so nobody can tell which is yours.
+      </p>
+      <div id="pw-result" class="pw-result" hidden></div>
+    </section>
+
+    <!-- Allowlist --------------------------------------------------------- -->
+    <section class="card">
+      <div class="card-label">Muted warnings</div>
+      <!--
+        Every "Always allow here" the user clicked, listed and reversible.
+        An opt-out you cannot find again is a trap, not a setting.
+      -->
+      <div id="allowlist-body">
+        <p class="empty">Nothing muted. You will be warned everywhere.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="tier-note" class="tier-note"></span>
+      <a href="http://localhost:5173" target="_blank" rel="noopener" class="link">Open dashboard</a>
+    </footer>
+
+    <script src="../lib/allowlist.js"></script>
+    <script src="../lib/api.js"></script>
+    <!-- Loaded for its host registry and its opt-in helpers. The DOM readers in
+         it never run here: nothing calls `read()` outside a content script. -->
+    <script src="../lib/chat-adapters.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

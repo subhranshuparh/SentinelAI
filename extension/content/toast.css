@@ -1,0 +1,22 @@
+/**
+ * Host-container styles only.
+ *
+ * Everything else lives inside the shadow root (see toast.js). Only the host
+ * element's positioning can be styled from out here, because shadow DOM
+ * deliberately blocks the page's CSS from reaching inside — which is the whole
+ * point: Gmail, LinkedIn and WhatsApp all ship aggressive global styles, and a
+ * warning that renders as invisible white-on-white is worse than no warning.
+ */
+
+#sentinelai-toast-host {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  /* Below common modal overlays but above page content. Not 2147483647:
+     stealing the top of the stack from a site's own dialogs is how an extension
+     ends up covering a payment confirmation. */
+  z-index: 2147482000;
+  /* The host is a passthrough; the panel inside re-enables its own events, so
+     the toast never blocks clicks on the page underneath it. */
+  pointer-events: none;
+}
