@@ -364,8 +364,8 @@ Each of these is argued in full in [ROADMAP.md](docs/ROADMAP.md) §0–1.
 
 ## Stack
 
-**Backend** FastAPI · Pydantic 2 · SQLAlchemy 2.0 · httpx · pytest
-**Extension** Chrome MV3, plain JS, no build step · offscreen document for the decoders
-**Dashboard** Vite 8 · React 19 · TypeScript · Tailwind 3 · Recharts
-**On-device** jsQR 1.4.0 · Tesseract.js 5.1.1 + `tessdata_fast` — vendored, pinned, checksummed, offline
-**AI** Google Gemini (`gemini-2.5-flash`) · Google Safe Browsing v4 · RDAP · HIBP Pwned Passwords
+**Backend** FastAPI · Pydantic 2 · SQLAlchemy 2.0 · httpx · pytest.
+**Extension** Chrome MV3, plain JS, no build step · offscreen document for the decoders.
+**Dashboard** Vite 8 · React 19 · TypeScript · Tailwind 3 · Recharts.
+**On-device** jsQR 1.4.0 · Tesseract.js 5.1.1 + `tessdata_fast` — vendored, pinned, checksummed, offline.
+**AI** Google Gemini (`gemini-2.5-flash`) · Google Safe Browsing v4 · RDAP · HIBP Pwned Passwords.
