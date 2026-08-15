@@ -17,9 +17,22 @@ import type {
 } from '../types'
 
 /**
- * `127.0.0.1` rather than `localhost` on purpose. On Windows, `localhost`
- * resolves to `::1` first, and uvicorn bound to IPv4 refuses it — which surfaces
- * as an unexplained connection error that costs twenty minutes to diagnose.
+ * API base URL resolution:
+ *
+ * LOCAL DEV (Vite dev server, backend on port 8000):
+ *   VITE_API_BASE is not set → falls back to 'http://127.0.0.1:8000'
+ *   `127.0.0.1` rather than `localhost` on purpose. On Windows, `localhost`
+ *   resolves to `::1` first, and uvicorn bound to IPv4 refuses it — which
+ *   surfaces as an unexplained connection error that costs twenty minutes.
+ *
+ * RAILWAY (single service — backend serves the compiled SPA):
+ *   Set VITE_API_BASE="" (empty string) in Railway env vars.
+ *   Empty BASE_URL makes all fetch calls use relative paths (/api/v1/...)
+ *   which resolve to the Railway-assigned domain automatically.
+ *   No hardcoded URL, no CORS issue, works on any Railway subdomain.
+ *
+ * SEPARATE BACKEND (e.g. Railway backend + Vercel dashboard):
+ *   Set VITE_API_BASE="https://your-backend.railway.app" in Vercel env vars.
  */
 export const BASE_URL = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000'
 
@@ -33,6 +46,7 @@ export const BASE_URL = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000'
  * the dashboard demonstrably runs the same engine as the extension.
  */
 export const VENDOR_URL = `${BASE_URL}/vendor`
+
 
 /**
  * A slow backend must not hang the screen forever with no way out. `fetch` has

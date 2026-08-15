@@ -5,7 +5,10 @@ microservices: one process to start, one log stream to read, one thing that can
 be broken on stage. Module boundaries live in ``app/services/``, which is where
 they actually matter.
 
-Phase 0 scope: health only. Routers are mounted in later phases.
+Railway deployment: ``start.sh`` (repo root) builds the React dashboard first,
+then starts this server. The ``/assets`` mount and the SPA catch-all at the
+bottom of this file serve the compiled dashboard from ``dashboard/dist/`` so
+the whole product runs as one Railway service on one port.
 """
 
 from __future__ import annotations
@@ -13,8 +16,9 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
@@ -24,8 +28,15 @@ from app.services.llm.gemini import warm_up
 
 settings = get_settings()
 
+#: Repo root — two levels above this file (backend/app/main.py).
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 #: ``backend/app/main.py`` -> repository root -> the extension's vendored assets.
-VENDOR_DIR = Path(__file__).resolve().parents[2] / "extension" / "lib" / "vendor"
+VENDOR_DIR = _REPO_ROOT / "extension" / "lib" / "vendor"
+
+#: Compiled React dashboard produced by ``npm run build`` in ``dashboard/``.
+#: Only present after ``start.sh`` runs (i.e. in Railway / CI, not local dev).
+DASHBOARD_DIST = _REPO_ROOT / "dashboard" / "dist"
 
 
 @asynccontextmanager
@@ -123,3 +134,63 @@ def health() -> dict[str, object]:
             "safe_browsing": bool(settings.SAFE_BROWSING_API_KEY),
         },
     }
+
+
+# --------------------------------------------------------------------------
+# Dashboard SPA — served only when the compiled dist/ folder exists.
+# --------------------------------------------------------------------------
+#
+# In Railway (after start.sh runs ``npm run build``), ``dashboard/dist/``
+# is present. The backend becomes the sole server for the whole product:
+# API routes respond above; everything else gets the React shell.
+#
+# In local development ``dashboard/dist/`` does not exist (Vite dev server
+# is used instead), so these two mounts simply do not register and the
+# backend starts cleanly without them.
+#
+# Mount order matters:
+#   1. /assets  — Vite's hashed JS/CSS bundle directory (must resolve first)
+#   2. catch-all — every other path returns index.html so React Router works
+#
+# The catch-all uses a path parameter rather than ``html=True`` on the mount
+# because Starlette's ``html=True`` mode does not serve index.html for
+# *nested* paths — it only does directory listings — which breaks any route
+# that isn't exactly ``/``.
+if DASHBOARD_DIST.is_dir():
+    _assets_dir = DASHBOARD_DIST / "assets"
+    if _assets_dir.is_dir():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=_assets_dir, html=False),
+            name="dashboard-assets",
+        )
+
+    _index = DASHBOARD_DIST / "index.html"
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str) -> FileResponse:
+        """Return the React shell for the root or client-side routes."""
+        cleaned = full_path.lstrip("/")
+
+        # Root route
+        if not cleaned or cleaned == "index.html":
+            if _index.is_file():
+                return FileResponse(_index)
+            raise HTTPException(status_code=404, detail="Not Found")
+
+        # Static assets in dist root (favicon.svg, logo.svg, etc.)
+        target_file = DASHBOARD_DIST / cleaned
+        if target_file.is_file() and not cleaned.endswith(".html"):
+            return FileResponse(target_file)
+
+        # File requests with extensions or system routes that don't exist must 404
+        if "." in cleaned or cleaned.startswith(("api", "vendor", "app", "docs", "redoc", "openapi", "health")):
+            raise HTTPException(status_code=404, detail="Not Found")
+
+        # Client-side SPA routes (no file extension)
+        if _index.is_file():
+            return FileResponse(_index)
+
+        raise HTTPException(status_code=404, detail="Not Found")
+
+

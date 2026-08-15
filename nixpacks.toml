@@ -1,0 +1,19 @@
+# nixpacks.toml — tells Railway's Nixpacks builder to install both
+# Python 3.11 and Node.js 20 in the same image.
+#
+# Without this file Nixpacks auto-detects one language. Because it sees
+# requirements.txt first it would pick Python only, then `npm install`
+# in start.sh would fail with "npm: command not found".
+
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20", "npm-9_x"]
+
+[phases.install]
+# Dependencies are installed by start.sh at runtime so nothing is
+# needed at build time. Nixpacks still runs a default install phase;
+# declaring it empty prevents it from running `pip install` with a
+# wrong working directory.
+cmds = []
+
+[start]
+cmd = "bash start.sh"
