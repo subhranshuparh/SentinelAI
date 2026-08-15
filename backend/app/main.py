@@ -194,3 +194,9 @@ if DASHBOARD_DIST.is_dir():
         raise HTTPException(status_code=404, detail="Not Found")
 
 
+if __name__ == "__main__":
+    import os
+    import uvicorn
+
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
