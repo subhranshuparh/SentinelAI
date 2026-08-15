@@ -1,12 +1,12 @@
 """Offline unit tests for Module 7 — Grounded Security Assistant."""
 
-import pytest
 from app.db.models import Device, PiiEvent, utcnow
 from app.db.session import SessionLocal
 from app.schemas.assistant import AssistantRequest
 from app.services.assistant.cards import load_corpus
 from app.services.assistant.engine import ask_assistant
 from app.services.assistant.retrieval import retrieve_cards
+
 
 
 def test_corpus_loading():

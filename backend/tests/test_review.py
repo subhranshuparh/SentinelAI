@@ -1,13 +1,9 @@
 """Offline unit tests for Module 5 — Fake Review Analysis."""
 
-import pytest
 from app.schemas.review import ReviewAnalysisRequest, ReviewItem
 from app.services.review.engine import analyze_reviews
-from app.services.review.heuristics import (
-    analyse_language,
-    analyse_pattern,
-    analyse_reviewer,
-)
+
+
 
 
 def test_organic_reviews():
