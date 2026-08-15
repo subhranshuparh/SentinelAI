@@ -6,7 +6,8 @@
 # in start.sh would fail with "npm: command not found".
 
 [phases.setup]
-nixPkgs = ["python311", "nodejs_20", "npm-9_x"]
+nixPkgs = ["nodejs_20", "python311"]
+
 
 [phases.install]
 # Dependencies are installed by start.sh at runtime so nothing is
