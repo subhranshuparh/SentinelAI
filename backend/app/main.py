@@ -41,18 +41,22 @@ DASHBOARD_DIST = _REPO_ROOT / "dashboard" / "dist"
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Create any missing tables on boot, and warm the outbound TLS connection.
-
-    ``create_all`` is safe to run every start: it is a no-op for tables that
-    exist. It does not ALTER, so a schema change means deleting sentinel.db — a
-    two-second operation at this scale, and the reason Alembic is not here.
-
-    The warm-up is fire-and-forget on a daemon thread; boot does not wait for it
-    and cannot fail because of it.
-    """
+    """Create any missing tables on boot, warm TLS, and seed initial demo data."""
     init_db()
     warm_up()
+    try:
+        from app.db.models import Device
+        from app.db.session import SessionLocal
+
+        with SessionLocal() as db:
+            if db.query(Device).first() is None:
+                from app.db.seed import seed
+
+                seed(reset=False)
+    except Exception:
+        pass
     yield
+
 
 app = FastAPI(
     title="SentinelAI",
@@ -85,46 +89,13 @@ app.include_router(dashboard.router)
 # --------------------------------------------------------------------------
 # Modules 9 & 12 — serving the vendored decoders to the dashboard
 # --------------------------------------------------------------------------
-#
-# The dashboard's screenshot drop-zone needs the same Tesseract and jsQR builds
-# the extension uses, and there were three ways to give it one:
-#
-#   * ``npm i tesseract.js`` — rejected. The package resolves its wasm core and
-#     its language model from a CDN by default, so the dashboard would silently
-#     stop working the moment the network is unplugged, which is precisely the
-#     condition the demo has to survive. It would also mean two different
-#     Tesseract builds in one product, so a bug reproducible in the browser
-#     might not reproduce in the extension.
-#   * copying the five files into ``dashboard/public/`` — rejected. Nine
-#     megabytes duplicated in the repository, with nothing keeping the two copies
-#     in step. The checksums in ``docs/INTEGRATION_NOTES.md`` would then cover
-#     one of them and not the other.
-#   * serving the extension's own copy read-only, which is this. One set of
-#     bytes on disk, one set of checksums, offline by construction, and the
-#     dashboard fallback provably runs the same engines as the extension.
-#
-# Read-only and inert. StaticFiles serves bytes; nothing under this mount is
-# executed by the backend, and the directory contains only the five vendored
-# assets listed in INTEGRATION_NOTES.md. It is *not* a general file server: the
-# path is fixed in code above and no part of a request contributes to it, and
-# Starlette rejects traversal outside the mounted root.
-#
-# Mounted conditionally so a backend-only deployment (no ``extension/``
-# directory beside it) still boots. StaticFiles raises at construction time when
-# its directory is missing, which would turn an absent optional asset into a
-# service that will not start.
 if VENDOR_DIR.is_dir():
     app.mount("/vendor", StaticFiles(directory=VENDOR_DIR, html=False), name="vendor")
 
 
 @app.get("/health", tags=["system"])
 def health() -> dict[str, object]:
-    """Liveness probe, and the fastest way to see which tiers are armed.
-
-    Reports *capability*, not secrets — it exposes whether a key is present, never
-    the key itself. Useful mid-demo: if Tier 2 silently stopped working, this
-    endpoint says so in one request.
-    """
+    """Liveness probe, and the fastest way to see which tiers are armed."""
     return {
         "status": "ok",
         "version": app.version,
@@ -139,23 +110,6 @@ def health() -> dict[str, object]:
 # --------------------------------------------------------------------------
 # Dashboard SPA — served only when the compiled dist/ folder exists.
 # --------------------------------------------------------------------------
-#
-# In Railway (after start.sh runs ``npm run build``), ``dashboard/dist/``
-# is present. The backend becomes the sole server for the whole product:
-# API routes respond above; everything else gets the React shell.
-#
-# In local development ``dashboard/dist/`` does not exist (Vite dev server
-# is used instead), so these two mounts simply do not register and the
-# backend starts cleanly without them.
-#
-# Mount order matters:
-#   1. /assets  — Vite's hashed JS/CSS bundle directory (must resolve first)
-#   2. catch-all — every other path returns index.html so React Router works
-#
-# The catch-all uses a path parameter rather than ``html=True`` on the mount
-# because Starlette's ``html=True`` mode does not serve index.html for
-# *nested* paths — it only does directory listings — which breaks any route
-# that isn't exactly ``/``.
 if DASHBOARD_DIST.is_dir():
     _assets_dir = DASHBOARD_DIST / "assets"
     if _assets_dir.is_dir():

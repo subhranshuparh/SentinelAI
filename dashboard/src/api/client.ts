@@ -31,10 +31,16 @@ import type {
  *   which resolve to the Railway-assigned domain automatically.
  *   No hardcoded URL, no CORS issue, works on any Railway subdomain.
  *
- * SEPARATE BACKEND (e.g. Railway backend + Vercel dashboard):
  *   Set VITE_API_BASE="https://your-backend.railway.app" in Vercel env vars.
  */
-export const BASE_URL = import.meta.env.VITE_API_BASE ?? 'http://127.0.0.1:8000'
+export const BASE_URL =
+  import.meta.env.VITE_API_BASE !== undefined
+    ? import.meta.env.VITE_API_BASE
+    : import.meta.env.DEV
+      ? 'http://127.0.0.1:8000'
+      : ''
+
+
 
 /**
  * Where the vendored OCR and QR engines are served from (Modules 9 & 12).
