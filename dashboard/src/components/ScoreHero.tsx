@@ -11,6 +11,7 @@
  * for thirty lines of geometry.
  */
 
+import { useEffect, useRef } from 'react'
 import type { DashboardSummary } from '../types'
 import { RISK_STYLES } from '../theme'
 
@@ -20,15 +21,35 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 export function ScoreHero({ summary }: { summary: DashboardSummary }) {
   const style = RISK_STYLES[summary.risk_level]
   const dash = (summary.overall_score / 100) * CIRCUMFERENCE
+  const arcRef = useRef<SVGCircleElement>(null)
 
   // Confidence below 1 means a component could not be measured. Surfaced as a
   // sentence rather than a raw decimal, because "0.8" means nothing to the
   // senior citizens and shoppers this product names as target users.
   const partial = summary.confidence < 1
 
+  // Animate the ring drawing on mount
+  useEffect(() => {
+    const arc = arcRef.current
+    if (!arc) return
+    arc.style.strokeDasharray = `0 ${CIRCUMFERENCE}`
+    arc.style.transition = 'none'
+    // Force reflow
+    void arc.getBoundingClientRect()
+    arc.style.transition = 'stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+    arc.style.strokeDasharray = `${dash} ${CIRCUMFERENCE}`
+  }, [dash])
+
   return (
-    <section className="card flex flex-col items-center gap-7 sm:flex-row sm:items-center sm:gap-9">
+    <section className="card-glass flex flex-col items-center gap-7 sm:flex-row sm:items-center sm:gap-9 animate-fade-in-up">
+      {/* Score ring */}
       <div className="relative shrink-0">
+        {/* Outer glow ring */}
+        <div
+          className="absolute inset-0 rounded-full opacity-20 blur-xl"
+          style={{ background: style.hex }}
+          aria-hidden
+        />
         <svg
           width="184"
           height="184"
@@ -36,7 +57,9 @@ export function ScoreHero({ summary }: { summary: DashboardSummary }) {
           role="img"
           aria-label={`Security score ${summary.overall_score} out of 100. ${style.label}.`}
         >
+          {/* Track ring */}
           <circle cx="92" cy="92" r={RADIUS} fill="none" stroke="#1b2334" strokeWidth="13" />
+          {/* Progress ring with glow */}
           <circle
             cx="92"
             cy="92"
@@ -46,24 +69,36 @@ export function ScoreHero({ summary }: { summary: DashboardSummary }) {
             strokeWidth="13"
             strokeLinecap="round"
             strokeDasharray={`${dash} ${CIRCUMFERENCE}`}
-            // Start the arc at 12 o'clock instead of 3 o'clock, which is where
-            // SVG puts angle zero.
+            // Start the arc at 12 o'clock instead of 3 o'clock
             transform="rotate(-90 92 92)"
+            ref={arcRef}
+            style={{
+              filter: `drop-shadow(0 0 8px ${style.hex}80) drop-shadow(0 0 20px ${style.hex}30)`,
+            }}
           />
+          {/* Subtle inner ring decoration */}
+          <circle cx="92" cy="92" r="62" fill="none" stroke="#1b2334" strokeWidth="0.5" strokeDasharray="3 6" opacity="0.4" />
         </svg>
+
+        {/* Score number centered in ring */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-semibold tabular-nums text-slate-50">
+          <span
+            className="text-5xl font-bold tabular-nums"
+            style={{ color: style.hex, textShadow: `0 0 20px ${style.hex}60` }}
+          >
             {summary.overall_score}
           </span>
           <span className="text-xs text-slate-500">out of 100</span>
         </div>
       </div>
 
-      <div className="min-w-0 text-center sm:text-left">
+      {/* Score text */}
+      <div className="min-w-0 text-center sm:text-left animate-fade-in-up stagger-2">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
           <h1 className="text-xl font-semibold text-slate-100">Your security score</h1>
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${style.pill}`}
+            className={`badge ${style.pill}`}
+            style={{ boxShadow: `0 0 10px ${style.hex}30` }}
           >
             <span aria-hidden className="mr-1">
               {style.glyph}
@@ -95,16 +130,20 @@ export function ScoreHero({ summary }: { summary: DashboardSummary }) {
 /** Compact counters. Derived server-side so a truncated timeline cannot skew them. */
 export function StatStrip({ summary }: { summary: DashboardSummary }) {
   const stats = [
-    { label: 'Sensitive details caught', value: summary.total_pii_events },
-    { label: 'Masked before sending', value: summary.total_masked },
-    { label: 'Risky sites flagged', value: summary.total_sites_flagged },
+    { label: 'Sensitive details caught', value: summary.total_pii_events, icon: '🔍' },
+    { label: 'Masked before sending', value: summary.total_masked, icon: '🛡️' },
+    { label: 'Risky sites flagged', value: summary.total_sites_flagged, icon: '⚠️' },
   ]
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {stats.map((stat) => (
-        <div key={stat.label} className="card py-4 text-center">
-          <div className="text-2xl font-semibold tabular-nums text-slate-100">{stat.value}</div>
+      {stats.map((stat, i) => (
+        <div
+          key={stat.label}
+          className={`card-glass py-4 text-center animate-fade-in-up stagger-${i + 1}`}
+        >
+          <div className="mb-1 text-lg">{stat.icon}</div>
+          <div className="text-2xl font-bold tabular-nums text-slate-100">{stat.value}</div>
           <div className="mt-1 text-xs leading-snug text-slate-500">{stat.label}</div>
         </div>
       ))}

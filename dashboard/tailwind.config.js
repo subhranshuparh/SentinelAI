@@ -29,6 +29,41 @@ export default {
         sm: ['0.9375rem', '1.4rem'],
         base: ['1.0625rem', '1.6rem'],
       },
+      // Custom keyframes that are referenced via animate-* utilities defined
+      // in index.css @layer utilities. Tailwind must know about these names
+      // so that the animate-* class references are not purged.
+      animation: {
+        'glow-pulse':     'glow-pulse 3s ease-in-out infinite',
+        'fade-in-up':     'fade-in-up 0.5s ease-out forwards',
+        'fade-in':        'fade-in 0.4s ease-out forwards',
+        'slide-in-right': 'slide-in-right 0.4s ease-out forwards',
+        'shimmer':        'shimmer 1.8s ease-in-out infinite',
+      },
+      keyframes: {
+        'glow-pulse': {
+          '0%, 100%': { opacity: '1', filter: 'drop-shadow(0 0 6px rgba(96,165,250,0.6))' },
+          '50%':      { opacity: '0.8', filter: 'drop-shadow(0 0 14px rgba(96,165,250,0.95))' },
+        },
+        'fade-in-up': {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
+        },
+        'slide-in-right': {
+          from: { opacity: '0', transform: 'translateX(16px)' },
+          to:   { opacity: '1', transform: 'translateX(0)' },
+        },
+        shimmer: {
+          '0%':   { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
     },
   },
   plugins: [],

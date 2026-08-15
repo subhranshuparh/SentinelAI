@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   SentinelAI Design System
+   Premium dark cybersecurity dashboard
+   ============================================================ */
+
 @layer base {
   html {
     color-scheme: dark;
@@ -9,7 +14,8 @@
 
   body {
     @apply bg-ink-900 text-slate-200 antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   /* Visible focus everywhere. The dashboard is keyboard-navigable by default
@@ -20,38 +26,224 @@
   }
 }
 
+/* ============================================================
+   Keyframe Animations
+   ============================================================ */
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.6)); }
+  50%       { opacity: 0.8; filter: drop-shadow(0 0 14px rgba(96, 165, 250, 0.95)); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes score-ring-draw {
+  from { stroke-dashoffset: 490; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.7; }
+}
+
+@keyframes grid-drift {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-60px); }
+}
+
+@keyframes status-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+@layer utilities {
+  .animate-glow-pulse    { animation: glow-pulse 3s ease-in-out infinite; }
+  .animate-fade-in-up    { animation: fade-in-up 0.5s ease-out forwards; }
+  .animate-fade-in       { animation: fade-in 0.4s ease-out forwards; }
+  .animate-slide-in-right { animation: slide-in-right 0.4s ease-out forwards; }
+
+  /* Staggered children */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.10s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.20s; }
+
+  /* Gradient text */
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #e2e8f0 0%, #60a5fa 50%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(90deg, #f1f5f9 0%, #60a5fa 60%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gradient borders via pseudo elements */
+  .border-gradient-blue {
+    position: relative;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  .border-gradient-blue::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(96,165,250,0.4), rgba(56,189,248,0.15), transparent);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Glow utilities */
+  .glow-blue   { box-shadow: 0 0 20px rgba(96, 165, 250, 0.2), 0 0 60px rgba(96, 165, 250, 0.08); }
+  .glow-cyan   { box-shadow: 0 0 20px rgba(34, 211, 238, 0.2), 0 0 60px rgba(34, 211, 238, 0.08); }
+  .glow-green  { box-shadow: 0 0 20px rgba(52, 211, 153, 0.2); }
+  .glow-red    { box-shadow: 0 0 20px rgba(248, 113, 113, 0.2); }
+
+  /* Glass card */
+  .glass {
+    background: rgba(18, 24, 38, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(96, 165, 250, 0.12);
+  }
+
+  /* Dot blink for live status */
+  .status-live { animation: status-blink 2s ease-in-out infinite; }
+}
+
+/* ============================================================
+   Component Classes
+   ============================================================ */
+
 @layer components {
+  /* Base card */
   .card {
     @apply rounded-xl border border-ink-700 bg-ink-800 p-5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    border-color: rgba(96, 165, 250, 0.2);
+    box-shadow: 0 0 24px rgba(96, 165, 250, 0.06);
+  }
+
+  /* Premium glass card */
+  .card-glass {
+    @apply rounded-xl p-5;
+    background: rgba(18, 24, 38, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(96, 165, 250, 0.14);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .card-glass:hover {
+    border-color: rgba(96, 165, 250, 0.3);
+    box-shadow: 0 4px 32px rgba(96, 165, 250, 0.1);
   }
 
   .card-title {
     @apply text-sm font-semibold uppercase tracking-wide text-slate-400;
   }
 
-  /* Form controls for the one interactive panel (the email checker). Defined
-     here rather than repeated per element so the focus ring, the placeholder
-     contrast, and the text size stay identical across the three of them —
-     14px minimum, because a form a senior citizen cannot read is a form that
-     does not work. */
+  /* Form inputs */
   .input {
     @apply w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-sm text-slate-100
       placeholder:text-slate-600 focus:border-sky-500/50;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:focus {
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
   }
 
-  /* Skeletons pulse rather than spin. A spinner says "wait"; a skeleton says
-     "here is the shape of what is coming", which makes the wait feel shorter
-     and stops the layout jumping when data lands. */
+  /* Skeleton loaders */
   .skeleton {
-    @apply animate-pulse rounded bg-ink-700;
+    background: linear-gradient(
+      90deg,
+      #1b2334 25%,
+      #243048 50%,
+      #1b2334 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    @apply rounded;
+  }
+
+  /* Premium button */
+  .btn-primary {
+    @apply rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all;
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 12px rgba(96,165,250,0.2);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(96,165,250,0.35);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled { @apply opacity-50 cursor-not-allowed; transform: none; }
+
+  /* Pill badge */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium;
   }
 }
+
+/* ============================================================
+   Background Grid Pattern
+   ============================================================ */
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(96,165,250,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ============================================================
+   Scrollbar Styling
+   ============================================================ */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0b0f16; }
+::-webkit-scrollbar-thumb { background: #1b2334; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3448; }
+
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

@@ -1,91 +1,207 @@
 /*
- * Popup styling. Dark by default, per the product brief.
+ * SentinelAI Extension Popup — Premium Styling
  *
- * Sizing note: 14px body text and a 340px width are both deliberate. The target
+ * Sizing note: 14px body text and a 360px width are both deliberate. The target
  * audience includes senior citizens, and Chrome popups do not zoom with the
  * page, so whatever is set here is the final rendered size on every machine.
+ *
+ * Design: Dark glassmorphism, cyan accent, animated status indicators.
  */
 
+/* ================================================================
+   CSS Variables
+   ================================================================ */
+
 :root {
-  --bg: #0b0e14;
-  --card: #12161f;
-  --border: #1e2740;
-  --text: #e6ebf5;
-  --muted: #8794ad;
-  --dim: #64748b;
-  --accent: #60a5fa;
-  --ok: #34d399;
-  --warn: #fbbf24;
-  --danger: #f87171;
+  --bg:      #0b0e14;
+  --card:    #111827;
+  --card-hover: #131c2e;
+  --border:  #1e2d47;
+  --border-hover: #2a4070;
+  --text:    #e2e8f0;
+  --muted:   #8794ad;
+  --dim:     #4b5e7a;
+  --accent:  #60a5fa;
+  --accent2: #38bdf8;
+  --ok:      #34d399;
+  --warn:    #fbbf24;
+  --danger:  #f87171;
+
+  /* Gradients */
+  --grad-brand: linear-gradient(90deg, #e2e8f0 0%, #60a5fa 60%, #38bdf8 100%);
+  --grad-card:  linear-gradient(135deg, rgba(30,58,110,0.15) 0%, transparent 60%);
 }
+
+/* ================================================================
+   Keyframes
+   ================================================================ */
+
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(52, 211, 153, 0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes logo-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(96,165,250,0.5)); }
+  50%       { filter: drop-shadow(0 0 10px rgba(96,165,250,0.9)); }
+}
+
+@keyframes shimmer-line {
+  0%   { background-position: -300% 0; }
+  100% { background-position:  300% 0; }
+}
+
+/* ================================================================
+   Reset & Base
+   ================================================================ */
 
 * {
   box-sizing: border-box;
   margin: 0;
+  padding: 0;
 }
 
 body {
-  width: 340px;
-  padding: 14px;
+  width: 360px;
+  padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
+  overflow-x: hidden;
+
+  /* Subtle grid background */
+  background-image:
+    linear-gradient(rgba(96,165,250,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* Header ------------------------------------------------------------------ */
+/* ================================================================
+   Header
+   ================================================================ */
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  padding: 12px 14px 11px;
+  background: rgba(11, 14, 20, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  position: relative;
+}
+
+/* Gradient accent line at bottom of header */
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(96,165,250,0.4) 25%,
+    rgba(56,189,248,0.6) 50%,
+    rgba(96,165,250,0.4) 75%,
+    transparent 100%
+  );
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+}
+
+.brand-logo {
+  flex-shrink: 0;
+  animation: logo-glow 3s ease-in-out infinite;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 h1 {
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-tagline {
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--dim);
-  flex: 0 0 auto;
+  flex-shrink: 0;
+  transition: background 0.3s ease;
 }
-.dot.online { background: var(--ok); }
+.dot.online {
+  background: var(--ok);
+  animation: dot-pulse 2s ease-in-out infinite;
+}
 .dot.offline { background: var(--danger); }
 
 .status-text {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
 }
 
-/* Cards ------------------------------------------------------------------- */
+/* ================================================================
+   Padding wrapper for content below header
+   ================================================================ */
+
+section, footer {
+  margin: 10px 14px 0;
+}
+
+/* ================================================================
+   Cards
+   ================================================================ */
 
 .card {
   background: var(--card);
+  background-image: var(--grad-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
-  margin-bottom: 10px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  background-color: var(--card-hover);
 }
 
 .card-label {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--dim);
-  margin-bottom: 8px;
+  margin-bottom: 9px;
+  font-weight: 600;
 }
 
 .site-host {
@@ -93,17 +209,19 @@ h1 {
   font-weight: 600;
   word-break: break-all;
   margin-bottom: 4px;
+  color: var(--text);
 }
 
 .verdict {
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
+  transition: color 0.2s ease;
 }
-.verdict.safe { color: var(--ok); }
-.verdict.suspicious { color: var(--warn); }
-.verdict.dangerous { color: var(--danger); }
-.verdict.unknown { color: var(--dim); }
+.verdict.safe      { color: var(--ok); text-shadow: 0 0 12px rgba(52,211,153,0.4); }
+.verdict.suspicious { color: var(--warn); text-shadow: 0 0 12px rgba(251,191,36,0.4); }
+.verdict.dangerous { color: var(--danger); text-shadow: 0 0 12px rgba(248,113,113,0.4); }
+.verdict.unknown   { color: var(--dim); }
 
 .verdict-reason {
   font-size: 12.5px;
@@ -111,13 +229,9 @@ h1 {
   margin-top: 4px;
 }
 
-/* Itemised reasons --------------------------------------------------------- */
-/*
-  Sized up deliberately. Senior citizens are a named target user, and 11px grey
-  text is where that promise usually breaks — the copy is written in plain
-  language and then set too small to read. 12.5px with 1.45 line-height is the
-  floor for the sentences that carry the actual explanation.
-*/
+/* ================================================================
+   Itemised reasons
+   ================================================================ */
 
 .reasons {
   list-style: none;
@@ -139,25 +253,21 @@ h1 {
 
 .reason-mark {
   flex: 0 0 auto;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   margin-top: 1px;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
-  line-height: 15px;
+  line-height: 16px;
   text-align: center;
 }
 
-/* Colour AND glyph. Colour alone would carry the whole meaning for a
-   red/green colourblind user, who would see three identical grey rows. */
-.reason.bad .reason-mark { background: rgba(248, 113, 113, 0.16); color: var(--danger); }
-.reason.good .reason-mark { background: rgba(52, 211, 153, 0.14); color: var(--ok); }
-.reason.unknown .reason-mark { background: rgba(100, 116, 139, 0.18); color: var(--dim); }
+.reason.bad .reason-mark    { background: rgba(248,113,113,0.14); color: var(--danger); }
+.reason.good .reason-mark   { background: rgba(52,211,153,0.12); color: var(--ok); }
+.reason.unknown .reason-mark { background: rgba(75,94,122,0.2); color: var(--dim); }
 
-/* The findings are what the user must read; a passed check is reassurance and
-   recedes. An unrun check is dimmer still, but never hidden. */
-.reason.good .reason-detail { color: var(--muted); }
+.reason.good .reason-detail    { color: var(--muted); }
 .reason.unknown .reason-detail { color: var(--dim); }
 
 .confidence {
@@ -167,12 +277,11 @@ h1 {
   font-size: 11.5px;
   color: var(--dim);
 }
-.confidence:empty {
-  /* No border floating under a complete check. */
-  display: none;
-}
+.confidence:empty { display: none; }
 
-/* Stats ------------------------------------------------------------------- */
+/* ================================================================
+   Stats
+   ================================================================ */
 
 .stats {
   display: flex;
@@ -182,29 +291,39 @@ h1 {
 .stat {
   flex: 1;
   text-align: center;
-  background: #0e131d;
+  background: rgba(10, 14, 22, 0.6);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 4px;
+  border-radius: 10px;
+  padding: 10px 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.stat:hover {
+  border-color: rgba(96,165,250,0.25);
+  box-shadow: 0 0 12px rgba(96,165,250,0.08);
 }
 
 .stat-value {
   display: block;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .stat-name {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Chat scam watching (Module 11) ------------------------------------------ */
+/* ================================================================
+   Chat scam watching
+   ================================================================ */
 
-/* The whole row is the label, so the checkbox has a click target the size of
-   the sentence. Part of the audience for this product is using a trackpad and
-   reading glasses; a 13px tick box is not a control. */
 .watch-row {
   display: flex;
   align-items: flex-start;
@@ -217,7 +336,7 @@ h1 {
   margin: 1px 0 0;
   width: 15px;
   height: 15px;
-  accent-color: #60a5fa;
+  accent-color: var(--accent);
   flex: 0 0 auto;
   cursor: pointer;
 }
@@ -228,7 +347,9 @@ h1 {
   color: var(--muted);
 }
 
-/* Allowlist --------------------------------------------------------------- */
+/* ================================================================
+   Allowlist
+   ================================================================ */
 
 .empty {
   font-size: 12.5px;
@@ -240,7 +361,7 @@ h1 {
   align-items: center;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid #161d2e;
+  border-bottom: 1px solid rgba(30,45,71,0.7);
 }
 .mute-row:last-child { border-bottom: none; }
 
@@ -253,7 +374,7 @@ h1 {
 
 .mute-type {
   font-size: 11px;
-  background: #1a2133;
+  background: rgba(26,33,51,0.8);
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 2px 6px;
@@ -270,42 +391,55 @@ h1 {
   padding: 3px 7px;
   cursor: pointer;
   flex: 0 0 auto;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.unmute:hover { background: #1a2133; }
+.unmute:hover { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.3); }
 .unmute:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* Password check (Module 4) ----------------------------------------------- */
+/* ================================================================
+   Password check
+   ================================================================ */
 
 .pw-input {
   width: 100%;
-  margin-top: 6px;
-  padding: 7px 9px;
-  background: var(--bg);
+  margin-top: 7px;
+  padding: 8px 10px;
+  background: rgba(11,14,20,0.7);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text);
   font-family: inherit;
-  /* 14px, matching body text. A password field rendered smaller than the rest of
-     the UI is a usability failure for exactly the audience this product names. */
   font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .pw-input::placeholder { color: var(--dim); }
-.pw-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pw-input:focus-visible {
+  outline: none;
+  border-color: rgba(96,165,250,0.5);
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.1);
+}
 
 .pw-button {
   width: 100%;
-  margin-top: 8px;
-  padding: 7px 9px;
-  background: #17213a;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--accent);
+  margin-top: 9px;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 8px;
+  color: #fff;
   font-family: inherit;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 10px rgba(96,165,250,0.15);
 }
-.pw-button:hover:not(:disabled) { background: #1a2745; }
-.pw-button:disabled { opacity: 0.5; cursor: default; }
+.pw-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 18px rgba(96,165,250,0.3);
+  transform: translateY(-1px);
+}
+.pw-button:disabled { opacity: 0.5; cursor: default; transform: none; }
 .pw-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .pw-privacy {
@@ -317,24 +451,20 @@ h1 {
 
 .pw-result {
   margin-top: 9px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 9px 11px;
+  border-radius: 8px;
   border-left: 3px solid var(--border);
-  background: var(--bg);
+  background: rgba(11,14,20,0.6);
+  animation: fade-in 0.25s ease-out;
 }
-/* Border colour carries the state, and the verdict text always states it in
-   words too — colour is never the only channel. */
-.pw-result.good { border-left-color: var(--ok); }
-.pw-result.bad { border-left-color: var(--danger); }
-.pw-result.warn { border-left-color: var(--warn); }
+.pw-result.good { border-left-color: var(--ok); box-shadow: -2px 0 12px rgba(52,211,153,0.15); }
+.pw-result.bad  { border-left-color: var(--danger); box-shadow: -2px 0 12px rgba(248,113,113,0.15); }
+.pw-result.warn { border-left-color: var(--warn); box-shadow: -2px 0 12px rgba(251,191,36,0.15); }
 .pw-result.busy { border-left-color: var(--accent); }
 
-.pw-verdict {
-  font-size: 13px;
-  font-weight: 600;
-}
+.pw-verdict { font-size: 13px; font-weight: 600; }
 .pw-result.good .pw-verdict { color: var(--ok); }
-.pw-result.bad .pw-verdict { color: var(--danger); }
+.pw-result.bad  .pw-verdict { color: var(--danger); }
 .pw-result.warn .pw-verdict { color: var(--warn); }
 
 .pw-detail {
@@ -344,25 +474,39 @@ h1 {
   color: var(--muted);
 }
 
-/* Footer ------------------------------------------------------------------ */
+/* ================================================================
+   Footer
+   ================================================================ */
 
-.footer {
+footer.footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 4px;
+  padding: 8px 14px 14px;
+  margin-top: 6px;
 }
 
 .tier-note {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--dim);
 }
 
 .link {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--accent);
   text-decoration: none;
+  font-weight: 500;
   flex: 0 0 auto;
+  transition: color 0.15s ease;
 }
-.link:hover { text-decoration: underline; }
+.link:hover { color: var(--accent2); }
+
+/* ================================================================
+   Scrollbar
+   ================================================================ */
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
