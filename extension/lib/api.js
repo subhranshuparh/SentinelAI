@@ -7,7 +7,7 @@
  * chrome://extensions — a key shipped here is a published key.
  */
 
-const SENTINEL_BACKEND = 'http://127.0.0.1:8000';
+const SENTINEL_BACKEND = 'https://sentinelai-production-2e60.up.railway.app';
 
 /** Abort a scan that outlives its usefulness. The user has typed more since. */
 const SCAN_TIMEOUT_MS = 4000;
