@@ -185,7 +185,7 @@ export default function App() {
           detail={
             firstRun
               ? 'Install the extension and browse for a minute, or run "python -m app.db.seed" in the backend folder to load a demo history.'
-              : `${error.message} Check that the backend is running on port 8000, then try again.`
+              : `${error.message} Check that the backend server is running, then try again.`
           }
           onRetry={() => {
             setLoading(true)

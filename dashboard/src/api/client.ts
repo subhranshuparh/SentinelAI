@@ -34,13 +34,24 @@ import type {
  *   Set VITE_API_BASE="https://your-backend.railway.app" in Vercel env vars.
  */
 export const BASE_URL =
-  import.meta.env.VITE_API_BASE !== undefined
+  import.meta.env.VITE_API_BASE !== undefined && import.meta.env.VITE_API_BASE !== ''
     ? import.meta.env.VITE_API_BASE
     : import.meta.env.DEV
       ? 'http://127.0.0.1:8000'
       : ''
 
-
+/**
+ * Build a valid URL object for API requests whether BASE_URL is set, relative, or in dev.
+ */
+export function buildApiUrl(path: string): URL {
+  if (BASE_URL) {
+    return new URL(path, BASE_URL)
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return new URL(path, window.location.origin)
+  }
+  return new URL(path, 'http://127.0.0.1:8000')
+}
 
 /**
  * Where the vendored OCR and QR engines are served from (Modules 9 & 12).
@@ -51,7 +62,7 @@ export const BASE_URL =
  * disk, one set of checksums in `docs/INTEGRATION_NOTES.md`, no CDN fetch, and
  * the dashboard demonstrably runs the same engine as the extension.
  */
-export const VENDOR_URL = `${BASE_URL}/vendor`
+export const VENDOR_URL = BASE_URL ? `${BASE_URL}/vendor` : '/vendor'
 
 
 /**
@@ -94,7 +105,7 @@ export class ApiError extends Error {
   readonly status?: number
 
   // Written out rather than using a constructor parameter property: the Vite
-  // template sets `erasableSyntaxOnly`, which bans TS-only syntax that has no
+  // template sets `erasableSyntaxOnly`, acquisition TS-only syntax that has no
   // JavaScript equivalent to strip.
   constructor(message: string, status?: number) {
     super(message)
@@ -104,7 +115,7 @@ export class ApiError extends Error {
 }
 
 export async function fetchSummary(deviceId?: string): Promise<DashboardSummary> {
-  const url = new URL('/api/v1/dashboard/summary', BASE_URL)
+  const url = buildApiUrl('/api/v1/dashboard/summary')
   if (deviceId) url.searchParams.set('device_id', deviceId)
 
   const controller = new AbortController()
@@ -166,7 +177,7 @@ async function postJson<T>(
 
   let response: Response
   try {
-    response = await fetch(new URL(path, BASE_URL), {
+    response = await fetch(buildApiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...options.headers },
       signal: controller.signal,
