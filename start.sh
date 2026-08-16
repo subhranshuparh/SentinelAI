@@ -14,11 +14,13 @@ if command -v python3 >/dev/null 2>&1; then
     --host 0.0.0.0 \
     --port "$PORT" \
     --workers 1 \
-    --log-level info
+    --log-level info \
+    2>&1
 else
   exec uvicorn main:app \
     --host 0.0.0.0 \
     --port "$PORT" \
     --workers 1 \
-    --log-level info
+    --log-level info \
+    2>&1
 fi
